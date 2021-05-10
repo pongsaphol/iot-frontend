@@ -1,16 +1,9 @@
-import {
-  useContext,
-  useState,
-  useEffect,
-  createContext,
-  Dispatch,
-  SetStateAction,
-} from 'react'
+import { useContext, useState, useEffect, createContext } from 'react'
 import firebase from '../lib/firebase'
 
 interface deviceContext {
   state: number
-  setState: Dispatch<SetStateAction<number>>
+  setState: (state: number) => Promise<void>
 }
 
 const initialState = { state: 0 }
@@ -24,10 +17,19 @@ export const useDevice = () => useContext(DeviceStateContext)
 
 const deviceContext = ({ children }) => {
   const [state, setState] = useState<number>(initialState.state)
+
+  const updateState = async (state: number): Promise<void> => {
+    await firebase.firestore().doc('devices/first').update({ state })
+  }
+
+  useEffect(() => {
+    console.log(state)
+  }, [state])
+
   useEffect(() => {
     const unsubcribe = firebase
       .firestore()
-      .doc('hello')
+      .doc('devices/first')
       .onSnapshot((doc) => {
         setState(doc.data().state)
       })
@@ -35,8 +37,9 @@ const deviceContext = ({ children }) => {
       unsubcribe()
     }
   }, [])
+
   return (
-    <DeviceStateContext.Provider value={{ state, setState }}>
+    <DeviceStateContext.Provider value={{ state, setState: updateState }}>
       {children}
     </DeviceStateContext.Provider>
   )
