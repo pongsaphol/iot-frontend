@@ -2,11 +2,11 @@ import { useContext, useState, useEffect, createContext } from 'react'
 import firebase from '../lib/firebase'
 
 interface deviceContext {
-  state: number
-  setState: (state: number) => Promise<void>
+  state: boolean
+  setState: () => Promise<void>
 }
 
-const initialState = { state: 0 }
+const initialState = { state: false }
 
 const DeviceStateContext = createContext<deviceContext>({
   ...initialState,
@@ -16,15 +16,11 @@ const DeviceStateContext = createContext<deviceContext>({
 export const useDevice = () => useContext(DeviceStateContext)
 
 const deviceContext = ({ children }) => {
-  const [state, setState] = useState<number>(initialState.state)
+  const [state, setState] = useState<boolean>(initialState.state)
 
-  const updateState = async (state: number): Promise<void> => {
-    await firebase.firestore().doc('devices/first').update({ state })
+  const updateState = async (): Promise<void> => {
+    await firebase.firestore().doc('devices/first').update({ state: !state })
   }
-
-  useEffect(() => {
-    console.log(state)
-  }, [state])
 
   useEffect(() => {
     const unsubcribe = firebase
